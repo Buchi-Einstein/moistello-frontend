@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { get } from '@/lib/api-client'
 import dynamic from 'next/dynamic'
 import { PageHeader } from '@/components/shared/page-header'
-import type { Circle, Contribution, Payout } from '@/types'
+import type { ApiResponse, Circle, Contribution, Payout } from '@/types'
 
 const ChartSkeleton = () => (
   <div className="rounded-2xl border border-white/5 bg-card/40 p-6 animate-pulse min-h-[260px] flex items-center justify-center">
@@ -25,8 +25,16 @@ const PayoutTimelineChart = dynamic(
   () => import('@/components/dashboard/charts/payout-timeline-chart').then(m => m.PayoutTimelineChart),
   { ssr: false, loading: ChartSkeleton }
 )
+const ContributionSummaryCard = dynamic(
+  () => import('@/components/dashboard/contribution-summary-card').then(m => m.ContributionSummaryCard),
+  { ssr: false, loading: ChartSkeleton }
+)
 const UpcomingPayoutsWidget = dynamic(
   () => import('@/components/dashboard/upcoming-payouts-widget').then(m => m.UpcomingPayoutsWidget),
+  { ssr: false, loading: ChartSkeleton }
+)
+const RecentActivityWidget = dynamic(
+  () => import('@/components/dashboard/recent-activity-widget').then(m => m.RecentActivityWidget),
   { ssr: false, loading: ChartSkeleton }
 )
 
@@ -36,7 +44,7 @@ export function DashboardContent() {
   const circlesQuery = useQuery({
     queryKey: ['dashboard', 'circles'],
     queryFn: async () => {
-      const res = await get<{ circles: Circle[] }>('/api/circles')
+      const res = await get<ApiResponse<{ circles: Circle[] }>>('/api/circles')
       return res.data?.circles || []
     },
   })
@@ -44,7 +52,7 @@ export function DashboardContent() {
   const contributionsQuery = useQuery({
     queryKey: ['dashboard', 'contributions'],
     queryFn: async () => {
-      const res = await get<{ contributions: Contribution[] }>('/api/contributions')
+      const res = await get<ApiResponse<{ contributions: Contribution[] }>>('/api/contributions')
       return res.data?.contributions || []
     },
   })
@@ -52,7 +60,7 @@ export function DashboardContent() {
   const payoutsQuery = useQuery({
     queryKey: ['dashboard', 'payouts'],
     queryFn: async () => {
-      const res = await get<{ payouts: Payout[] }>('/api/payouts')
+      const res = await get<ApiResponse<{ payouts: Payout[] }>>('/api/payouts')
       return res.data?.payouts || []
     },
   })
@@ -78,6 +86,13 @@ export function DashboardContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          <ContributionSummaryCard
+            contributions={contributions}
+            isLoading={contributionsQuery.isLoading}
+            error={contributionsQuery.isError ? "Could not load your contributions." : null}
+            onRetry={() => void contributionsQuery.refetch()}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <SavingsGrowthChart goals={mockSavingsGoals} />
             <UpcomingPayoutsWidget
@@ -96,6 +111,7 @@ export function DashboardContent() {
 
         <div className="space-y-6">
           <PayoutTimelineChart payouts={payouts} />
+          <RecentActivityWidget />
         </div>
       </div>
     </div>

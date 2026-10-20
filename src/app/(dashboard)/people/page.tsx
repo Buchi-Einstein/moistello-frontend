@@ -216,7 +216,7 @@ export default function PeopleDirectoryPage() {
                 setTierFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-aurora-violet"
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-foreground"
               data-testid="tier-filter-select"
             >
               <option value="all" className="bg-background">All Tiers</option>
@@ -233,7 +233,7 @@ export default function PeopleDirectoryPage() {
               aria-label="Sort people"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "score" | "circles" | "savings")}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-aurora-violet"
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:border-foreground"
               data-testid="sort-by-select"
             >
               <option value="score" className="bg-background">Reputation Score</option>
@@ -297,7 +297,7 @@ export default function PeopleDirectoryPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Avatar name={person.displayName} size="md" className="border border-white/10" />
+                  <Avatar fallback={person.displayName} size="md" className="border border-white/10" />
                   <div>
                     <h3 className="font-heading text-base font-semibold text-foreground group-hover:text-aurora-violet transition-colors">
                       {person.displayName}

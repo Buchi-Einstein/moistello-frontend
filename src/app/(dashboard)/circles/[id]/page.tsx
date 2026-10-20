@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import dynamic from "next/dynamic";
 import { CircleMembersPreview } from "./circle-members-preview";
+import { PrintSummaryButton } from "./print/print-summary-button";
 import { CircleStatCards } from "./circle-stat-cards";
 import { CircleRoundTimeline } from "./circle-round-timeline";
 import { CirclePayoutsList } from "./circle-payouts-list";
@@ -122,10 +123,7 @@ export default function CircleDetailPage() {
     try {
       await joinCircle.mutateAsync({
         circleId,
-        payload: { inviteCode: joinCodeValue.trim() } as Record<
-          string,
-          unknown
-        >,
+        payload: { inviteCode: joinCodeValue.trim() },
       });
       setShowJoinCodeModal(false);
       setJoinCodeValue("");
@@ -219,15 +217,16 @@ export default function CircleDetailPage() {
             >
               {circle.status}
             </Badge>
-            {isOrganizer && (
-              <ButtonLink href={`/circles/${circleId}/settings`}
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<Settings className="h-4 w-4" />}
-                >
-                  Manage
-                </ButtonLink>
-            )}
+        {isOrganizer && (
+          <ButtonLink href={`/circles/${circleId}/settings`}
+              variant="outline"
+              size="sm"
+              leftIcon={<Settings className="h-4 w-4" />}
+            >
+              Manage
+            </ButtonLink>
+        )}
+        {isOrganizer && <PrintSummaryButton circleId={circleId} />}
           </div>
         }
       />
@@ -378,10 +377,11 @@ export default function CircleDetailPage() {
         isOpen={invite.isOpen}
         onClose={invite.close}
         code={invite.code}
-        copied={invite.copied}
+        inviteUrl={invite.inviteUrl}
+        expiresAt={invite.expiresAt}
+        ttlHours={invite.ttlHours}
         isError={invite.isError}
         error={invite.error}
-        onCopy={invite.copy}
       />
 
       <CircleJoinCodeModal

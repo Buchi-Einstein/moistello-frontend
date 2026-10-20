@@ -140,7 +140,7 @@ function NotificationItem({
           e.stopPropagation();
           onToggleSelect(notification.id);
         }}
-        className="mt-2 shrink-0 rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora-violet/50"
+        className="mt-2 shrink-0 rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
       >
         {selected ? (
           <SquareCheck className="h-4 w-4 text-aurora-violet" />
@@ -232,7 +232,7 @@ export default function NotificationsPage() {
   }, [notifications, typeFilter, activeTab]);
 
   const largeList = filtered.length > STAGGER_CHILDREN_LIMIT;
-  const listMotion = useListMotion(largeList);
+  const listMotion = useListMotion(filtered.length);
   const allSelected = filtered.length > 0 && filtered.every((n) => selectedIds.includes(n.id));
 
   useEffect(() => {
@@ -319,7 +319,7 @@ export default function NotificationsPage() {
           description={t("notifications.description")}
         />
         <div className="flex items-center gap-3">
-          <LiveIndicator isLive={wsState.isConnected} label={wsState.status} />
+          <LiveIndicator connectionState={wsState.connectionState} />
           <ButtonLink href="/notifications/archive"  variant="outline" size="sm" leftIcon={<Archive className="h-4 w-4" />}>
               {t("notifications.archive")}
             </ButtonLink>
@@ -370,7 +370,7 @@ export default function NotificationsPage() {
             aria-label="ListFilter notifications by type"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-aurora-violet"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
           >
             <option value="all">{t("common.allTypes")}</option>
             {TYPE_FILTERS.map((f) => (
@@ -384,7 +384,7 @@ export default function NotificationsPage() {
             aria-label="Group notifications"
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as "none" | "type" | "day")}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-aurora-violet"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
           >
             <option value="none">{t("notifications.noGrouping")}</option>
             <option value="type">{t("notifications.groupByType")}</option>
@@ -450,7 +450,7 @@ export default function NotificationsPage() {
           {grouped.map((group) => (
             <div key={group.key} className="space-y-3">
               {groupBy !== "none" && (
-                <h3 className="font-heading text-xs font-semibold tracking-wider text-muted-foreground uppercase px-1">
+                <h3 className="font-heading text-xs font-semibold tracking-wider text-muted-foreground uppercase px-1 sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                   {group.label} ({group.items.length})
                 </h3>
               )}

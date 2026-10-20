@@ -37,6 +37,30 @@ function isSameOriginApiRequest(config: InternalAxiosRequestConfig): boolean {
 let refreshInFlight: Promise<string> | null = null
 
 /**
+* Resets in-memory client auth state and clears any in-flight refresh promise.
+ */
+export function clearApiClientState(): void {
+  refreshInFlight = null
+  clearAccessToken()
+}
+
+/**
+ * Latches the sign-out side effects so a burst of concurrent 401s produces one
+ * sign-out rather than one per request.
+ *
+ * Without this, a page that fires six requests at once and has an expired token
+ * issues six `DELETE /api/auth/session` round trips, dispatches six
+ * `auth:required` events, and attempts six navigations. It does not loop — the
+ * `_retry` marker bounds each request to one attempt — but it is enough
+ * duplicate work to fill the network panel during exactly the moment a user is
+ * being signed out.
+ *
+ * Deliberately never reset: the tab is navigating to /login, and if the user
+ * does come back the module is re-initialised on the next full page load.
+ */
+let signOutInFlight = false
+
+/**
  * Mints a new access token.
  *
  * The refresh token is held in an `HttpOnly` cookie that only this app's own
@@ -49,6 +73,8 @@ async function refreshAccessToken(): Promise<string> {
     return refreshInFlight
   }
 
+  const initialToken = getAccessToken()
+
   refreshInFlight = (async () => {
     try {
       const response = await axios.post("/api/auth/refresh", undefined, {
@@ -60,7 +86,9 @@ async function refreshAccessToken(): Promise<string> {
         throw new Error("No token in refresh response")
       }
 
-      setAccessToken(newToken)
+      if (getAccessToken() === initialToken || getAccessToken() === null) {
+        setAccessToken(newToken)
+      }
       return newToken
     } finally {
       refreshInFlight = null
@@ -69,6 +97,7 @@ async function refreshAccessToken(): Promise<string> {
 
   return refreshInFlight
 }
+
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -111,7 +140,8 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)
       } catch (refreshError) {
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && !signOutInFlight) {
+          signOutInFlight = true
           clearAccessToken()
           // The session cookies are HttpOnly, so only the server can drop
           // them. Wait for that before leaving, otherwise the middleware may
